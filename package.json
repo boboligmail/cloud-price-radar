@@ -1,0 +1,36 @@
+{
+  "name": "cloud-price-radar",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "collect:cloud-offers": "node scripts/collect-cloud-offers.mjs",
+    "test:cloud": "node scripts/test-cloud-offers.mjs",
+    "test:cloud-ui": "next build --webpack && node scripts/test-cloud-ui.mjs",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy -- --keep-vars"
+  },
+  "dependencies": {
+    "lucide-react": "^1.14.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "1.19.11",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "playwright-core": "^1.59.1",
+    "typescript": "^5",
+    "wrangler": "4.99.0"
+  }
+}

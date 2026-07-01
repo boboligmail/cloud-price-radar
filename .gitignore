@@ -1,0 +1,13 @@
+.next
+.open-next
+.omo
+node_modules
+dist
+out
+tsconfig.tsbuildinfo
+.env
+.env*
+!.env.example
+*.log
+data/*.sqlite
+data/*.sqlite.error.txt
