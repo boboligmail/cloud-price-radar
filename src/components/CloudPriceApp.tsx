@@ -1,8 +1,8 @@
 "use client";
 
-import { Clock3, Cpu, RotateCcw, Search, Server } from "lucide-react";
+import { Clock3, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { FilterSelect, Pagination, SearchBox } from "@/components/Controls";
+import { BudgetRange, FilterSelect, Pagination, SegmentedControl } from "@/components/Controls";
 import { CloudPriceTable } from "@/components/CloudPriceTable";
 import type { CloudOffer, CloudOfferKind } from "@/lib/cloud-comparison";
 import {
@@ -12,8 +12,6 @@ import {
   getGpuModelOptions,
   getRegionOptions,
   gpuCountOptions,
-  hourlyOptions,
-  monthlyOptions,
   storageOptions,
   vpsCpuOptions,
   vpsMemoryOptions,
@@ -76,12 +74,14 @@ export function CloudPriceApp({ offers, updatedAt }: CloudPriceAppProps) {
         <a className="brand" href="#vps" aria-label="cloud-price-radar 首页">
           cloud-price-radar
         </a>
-        <nav className="topnav" aria-label="主导航">
-          <button type="button" className={activeKind === "vps" ? "navItem active" : "navItem"} onClick={() => switchTab("vps")}>
-            VPS 比价
+        <nav className="topnav" role="tablist" aria-label="云资源类型">
+          <button type="button" role="tab" aria-selected={activeKind === "vps"} className={activeKind === "vps" ? "navItem active" : "navItem"} onClick={() => switchTab("vps")}>
+            <span>VPS 比价</span>
+            <small>{tabTotals.vps} 条</small>
           </button>
-          <button type="button" className={activeKind === "gpu" ? "navItem active" : "navItem"} onClick={() => switchTab("gpu")}>
-            GPU 租赁
+          <button type="button" role="tab" aria-selected={activeKind === "gpu"} className={activeKind === "gpu" ? "navItem active" : "navItem"} onClick={() => switchTab("gpu")}>
+            <span>GPU 租赁</span>
+            <small>{tabTotals.gpu} 条</small>
           </button>
         </nav>
         <div className="updatedAt">
@@ -92,39 +92,44 @@ export function CloudPriceApp({ offers, updatedAt }: CloudPriceAppProps) {
 
       <main className="pageShell">
         <section className="hero">
-          <h1>云服务器与 GPU 租赁价格筛选器</h1>
-          <p>按配置、地区、计费方式和风险快速找到可核验的低价方案。</p>
-        </section>
-
-        <section className="tabs" role="tablist" aria-label="云资源类型">
-          <TabButton active={activeKind === "vps"} label="VPS 比价" count={tabTotals.vps} icon={<Server size={22} />} onClick={() => switchTab("vps")} />
-          <TabButton active={activeKind === "gpu"} label="GPU 租赁" count={tabTotals.gpu} icon={<Cpu size={22} />} onClick={() => switchTab("gpu")} />
+          <h1>{activeKind === "vps" ? "VPS 云服务器价格筛选" : "GPU 算力租赁价格筛选"}</h1>
+          <p>
+            {activeKind === "vps"
+              ? "按 CPU、内存、硬盘、地区和计费方式筛选，直接去官网核验。"
+              : "按型号、显存、GPU 数量、地区和小时价筛选，直接去官网核验。"}
+          </p>
         </section>
 
         <section className="filterPanel" aria-label="筛选区">
-          <SearchBox
-            label="搜索"
-            value={draftFilters.query}
-            placeholder={activeKind === "vps" ? "商家 / CPU / 地区" : "商家 / 型号 / 显存"}
-            onChange={(query) => updateDraft({ query })}
-          />
           {activeKind === "vps" ? (
             <>
-              <FilterSelect label="CPU 核数" value={draftFilters.cpuMin} options={vpsCpuOptions} onChange={(cpuMin) => updateDraft({ cpuMin })} />
-              <FilterSelect label="内存" value={draftFilters.memoryMin} options={vpsMemoryOptions} onChange={(memoryMin) => updateDraft({ memoryMin })} />
-              <FilterSelect label="硬盘空间" value={draftFilters.storageMin} options={storageOptions} onChange={(storageMin) => updateDraft({ storageMin })} />
-              <FilterSelect label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
-              <FilterSelect label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
-              <FilterSelect label="预算" value={draftFilters.monthlyMax} options={monthlyOptions} onChange={(monthlyMax) => updateDraft({ monthlyMax })} />
+              <SegmentedControl label="CPU 核数" value={draftFilters.cpuMin} options={vpsCpuOptions} onChange={(cpuMin) => updateDraft({ cpuMin })} />
+              <SegmentedControl label="内存" value={draftFilters.memoryMin} options={vpsMemoryOptions} onChange={(memoryMin) => updateDraft({ memoryMin })} />
+              <SegmentedControl label="硬盘" value={draftFilters.storageMin} options={storageOptions} onChange={(storageMin) => updateDraft({ storageMin })} />
+              <SegmentedControl label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
+              <SegmentedControl label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
+              <BudgetRange
+                label="预算 (USD)"
+                minValue={draftFilters.monthlyMin}
+                maxValue={draftFilters.monthlyMax === "0" ? "" : draftFilters.monthlyMax}
+                onMinChange={(monthlyMin) => updateDraft({ monthlyMin })}
+                onMaxChange={(monthlyMax) => updateDraft({ monthlyMax })}
+              />
             </>
           ) : (
             <>
               <FilterSelect label="GPU 型号" value={draftFilters.gpuModel} options={gpuModelOptions} onChange={(gpuModel) => updateDraft({ gpuModel })} />
-              <FilterSelect label="GPU 数量" value={draftFilters.gpuCountMin} options={gpuCountOptions} onChange={(gpuCountMin) => updateDraft({ gpuCountMin })} />
-              <FilterSelect label="显存" value={draftFilters.vramMin} options={vramOptions} onChange={(vramMin) => updateDraft({ vramMin })} />
-              <FilterSelect label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
-              <FilterSelect label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
-              <FilterSelect label="小时价预算" value={draftFilters.hourlyMax} options={hourlyOptions} onChange={(hourlyMax) => updateDraft({ hourlyMax })} />
+              <SegmentedControl label="GPU 数量" value={draftFilters.gpuCountMin} options={gpuCountOptions} onChange={(gpuCountMin) => updateDraft({ gpuCountMin })} />
+              <SegmentedControl label="显存" value={draftFilters.vramMin} options={vramOptions} onChange={(vramMin) => updateDraft({ vramMin })} />
+              <SegmentedControl label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
+              <SegmentedControl label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
+              <BudgetRange
+                label="小时价预算 (USD)"
+                minValue={draftFilters.hourlyMin}
+                maxValue={draftFilters.hourlyMax === "0" ? "" : draftFilters.hourlyMax}
+                onMinChange={(hourlyMin) => updateDraft({ hourlyMin })}
+                onMaxChange={(hourlyMax) => updateDraft({ hourlyMax })}
+              />
             </>
           )}
           <button type="button" className="secondaryButton" onClick={resetFilters}>
@@ -147,28 +152,6 @@ export function CloudPriceApp({ offers, updatedAt }: CloudPriceAppProps) {
         <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
       </main>
     </>
-  );
-}
-
-function TabButton({
-  active,
-  label,
-  count,
-  icon,
-  onClick,
-}: {
-  readonly active: boolean;
-  readonly label: string;
-  readonly count: number;
-  readonly icon: React.ReactNode;
-  readonly onClick: () => void;
-}) {
-  return (
-    <button type="button" role="tab" aria-selected={active} className={active ? "tabButton active" : "tabButton"} onClick={onClick}>
-      {icon}
-      <span>{label}</span>
-      <small>{count} 条</small>
-    </button>
   );
 }
 

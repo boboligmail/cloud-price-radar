@@ -1,5 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import type { CloudOffer, CloudOfferKind } from "@/lib/cloud-comparison";
+import { formatBilling, toChineseRegion } from "@/lib/cloud-offer-formatters";
 import { getGpuModel, normalizeRegion } from "@/lib/cloud-offer-filters";
 
 type CloudPriceTableProps = {
@@ -71,7 +72,7 @@ function VpsRow({ offer, rowNumber }: { readonly offer: CloudOffer; readonly row
       <DataCell>{offer.config.storage}</DataCell>
       <DataCell>{offer.config.network}</DataCell>
       <DataCell>{formatRegions(offer)}</DataCell>
-      <DataCell>{offer.billing}</DataCell>
+      <DataCell>{formatBilling(offer.billing)}</DataCell>
       <PriceCell offer={offer} />
       <RiskCell label={offer.riskLabel} />
       <OfficialCell offer={offer} />
@@ -89,7 +90,7 @@ function GpuRow({ offer, rowNumber }: { readonly offer: CloudOffer; readonly row
       <DataCell strong>{offer.config.memory}</DataCell>
       <DataCell>{offer.config.storage}</DataCell>
       <DataCell>{formatRegions(offer)}</DataCell>
-      <DataCell>{offer.billing}</DataCell>
+      <DataCell>{formatBilling(offer.billing)}</DataCell>
       <PriceCell offer={offer} />
       <RiskCell label={offer.riskLabel} />
       <OfficialCell offer={offer} />
@@ -147,7 +148,7 @@ function OfficialCell({ offer }: { readonly offer: CloudOffer }) {
 }
 
 function formatRegions(offer: CloudOffer) {
-  return offer.regions.length > 0 ? offer.regions.slice(0, 3).join(" / ") : "地区未列出";
+  return offer.regions.length > 0 ? offer.regions.slice(0, 3).map(toChineseRegion).join(" / ") : "地区未列出";
 }
 
 function getRegionGroups(offer: CloudOffer) {

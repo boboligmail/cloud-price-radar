@@ -61,28 +61,33 @@ async function runBrowserChecks() {
 async function assertVpsPage(page) {
   const bodyText = await page.locator("body").innerText();
   const headerText = await page.locator("header").innerText();
-  assert(bodyText.includes("云服务器与 GPU 租赁价格筛选器"), "hero title must match target copy");
-  assert(bodyText.includes("按配置、地区、计费方式和风险快速找到可核验的低价方案。"), "subtitle must match target copy");
+  assert(bodyText.includes("VPS 云服务器价格筛选"), "VPS hero title must match target copy");
+  assert(bodyText.includes("按 CPU、内存、硬盘、地区和计费方式筛选，直接去官网核验。"), "VPS subtitle must match target copy");
   assert(headerText.includes("VPS 比价") && headerText.includes("GPU 租赁"), "header must expose VPS/GPU nav");
   assert(headerText.includes("最近更新时间："), "header must show recent update time");
   assert(!/卡网订阅|官网订阅|官方 API|中转 API|数据源|更新记录/.test(headerText), "header must not expose old ai-home navigation");
   assert(!bodyText.includes("当前筛选结果"), "right-side summary panel must not render");
   assert(!bodyText.includes("核验/进入"), "old official button copy must not render");
+  assert(!bodyText.includes("商家 / CPU / 地区"), "search box placeholder must not render");
   assert(await page.locator("th", { hasText: "CPU" }).count(), "VPS table must include CPU");
   assert((await page.locator("th", { hasText: "型号" }).count()) === 0, "VPS table must not include 型号 column");
   assert(bodyText.includes("官网直达"), "official button copy must be 官网直达");
 
-  await page.locator("label").filter({ hasText: "CPU 核数" }).locator("select").selectOption("2");
+  await page.locator("fieldset").filter({ hasText: "CPU 核数" }).getByRole("button", { name: "2" }).click();
   await page.getByRole("button", { name: /筛选/ }).click();
   const rows = await tableRows(page);
   assert(rows.length > 0, "VPS CPU filter must keep visible rows");
   for (const row of rows) {
     assert(parseFirstNumber(row.cells[2]) >= 2, `VPS CPU filter leaked row: ${row.text}`);
+    assert(!row.cells[6].includes("United States"), `VPS region must be localized: ${row.text}`);
+    assert(!row.cells[7].startsWith("月付；"), `VPS billing must not keep leading 月付: ${row.text}`);
   }
 }
 
 async function assertGpuPage(page) {
   const bodyText = await page.locator("body").innerText();
+  assert(bodyText.includes("GPU 算力租赁价格筛选"), "GPU hero title must match target copy");
+  assert(bodyText.includes("按型号、显存、GPU 数量、地区和小时价筛选，直接去官网核验。"), "GPU subtitle must match target copy");
   assert(await page.locator("th", { hasText: "型号" }).count(), "GPU table must include model column");
   assert(await page.locator("th", { hasText: "显存" }).count(), "GPU table must include VRAM column");
   assert(!bodyText.includes("当前筛选结果"), "GPU page must not render right-side summary panel");
@@ -104,22 +109,23 @@ async function assertGpuPage(page) {
   }
 
   await page.getByRole("button", { name: /重置/ }).click();
-  await page.locator("label").filter({ hasText: "计费方式" }).locator("select").selectOption("spot");
+  await page.locator("fieldset").filter({ hasText: "计费方式" }).getByRole("button", { name: "抢占式" }).click();
   await page.getByRole("button", { name: /筛选/ }).click();
   const spotRows = await tableRows(page);
   assert(spotRows.length > 0, "GPU spot filter must keep visible rows");
   for (const row of spotRows) {
-    assert(row.cells[7].toLowerCase().includes("spot"), `GPU spot filter leaked billing row: ${row.text}`);
+    assert(row.cells[7].includes("抢占式"), `GPU spot filter leaked billing row: ${row.text}`);
     assert(row.cells[9] === "抢占中断", `GPU spot risk label must be 抢占中断: ${row.text}`);
   }
 
   await page.getByRole("button", { name: /重置/ }).click();
-  await page.locator("label").filter({ hasText: "地区" }).locator("select").selectOption("us");
+  await page.locator("fieldset").filter({ hasText: "地区" }).getByRole("button", { name: "美国" }).click();
   await page.getByRole("button", { name: /筛选/ }).click();
   const usRows = await tableRows(page);
   assert(usRows.length > 0, "GPU US region filter must keep visible rows");
   for (const row of usRows) {
     assert(row.regionGroups.split(/\s+/).includes("us"), `GPU US region filter leaked row: ${row.text}`);
+    assert(!row.cells[6].includes("United States"), `GPU region must be localized: ${row.text}`);
   }
 
   const nextButton = page.getByRole("button", { name: "下一页" });

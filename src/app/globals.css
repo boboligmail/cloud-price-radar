@@ -79,6 +79,9 @@ a {
 }
 
 .navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   border: 0;
   border-bottom: 3px solid transparent;
   background: transparent;
@@ -89,13 +92,20 @@ a {
   padding: 20px 4px 17px;
 }
 
+.navItem small {
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .navItem.active {
   border-color: var(--accent);
   color: var(--accent);
 }
 
 .navItem:focus-visible,
-.tabButton:focus-visible,
+.segmentOptions button:focus-visible,
+.budgetInputs input:focus,
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
 .officialLink:focus-visible,
@@ -138,45 +148,9 @@ a {
   font-size: 17px;
 }
 
-.tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
-  gap: 12px;
-  max-width: 760px;
-  margin-bottom: 22px;
-}
-
-.tabButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 58px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: #2e3836;
-  cursor: pointer;
-  font-size: 17px;
-  font-weight: 800;
-  outline-color: rgb(19 138 77 / 0.22);
-}
-
-.tabButton small {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.tabButton.active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
 .filterPanel {
-  display: grid;
-  grid-template-columns: minmax(230px, 1.4fr) repeat(6, minmax(126px, 1fr)) 96px 96px;
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: end;
   margin-bottom: 18px;
@@ -190,16 +164,22 @@ a {
 .control {
   display: grid;
   gap: 7px;
+  min-width: max-content;
+  margin: 0;
+  border: 0;
+  padding: 0;
 }
 
-.control span {
+.control span,
+.control legend {
   color: #27312f;
   font-size: 13px;
   font-weight: 750;
+  padding: 0;
 }
 
-.control input,
-.control select {
+.control select,
+.budgetInputs input {
   width: 100%;
   height: 40px;
   border: 1px solid var(--border);
@@ -210,10 +190,71 @@ a {
   padding: 0 11px;
 }
 
-.control input:focus,
 .control select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgb(19 138 77 / 0.12);
+}
+
+.segmentOptions,
+.budgetInputs {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.segmentOptions button {
+  min-width: 48px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-left: 0;
+  background: #fff;
+  color: #26312f;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.segmentOptions button:first-child {
+  border-left: 1px solid var(--border);
+  border-radius: 6px 0 0 6px;
+}
+
+.segmentOptions button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.segmentOptions button.active {
+  border-color: rgb(19 138 77 / 0.48);
+  background: var(--accent-soft);
+  color: var(--accent);
+  position: relative;
+  z-index: 1;
+}
+
+.budgetInputs {
+  gap: 8px;
+}
+
+.budgetInputs input {
+  max-width: 96px;
+  text-align: center;
+}
+
+.selectControl {
+  min-width: 210px;
+}
+
+.budgetInputs input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(19 138 77 / 0.12);
+  outline: none;
+}
+
+.budgetInputs span {
+  color: var(--muted);
+  font-weight: 800;
 }
 
 .primaryButton,
@@ -442,11 +483,7 @@ a {
 
 @media (max-width: 1180px) {
   .filterPanel {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .searchControl {
-    grid-column: span 3;
+    align-items: stretch;
   }
 }
 
@@ -475,13 +512,17 @@ a {
     padding: 24px 16px 38px;
   }
 
-  .tabs,
   .filterPanel {
-    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
-  .searchControl {
-    grid-column: auto;
+  .control,
+  .selectControl {
+    min-width: 100%;
+  }
+
+  .segmentOptions {
+    overflow-x: auto;
   }
 
   .hero h1 {

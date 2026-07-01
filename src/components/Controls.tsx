@@ -1,23 +1,58 @@
-import type { ChangeEvent } from "react";
-
 type Option = readonly [string, string];
 
-export function SearchBox({
+export function SegmentedControl({
   label,
   value,
-  placeholder,
+  options,
   onChange,
 }: {
   readonly label: string;
   readonly value: string;
-  readonly placeholder: string;
+  readonly options: readonly Option[];
   readonly onChange: (value: string) => void;
 }) {
   return (
-    <label className="control searchControl">
-      <span>{label}</span>
-      <input value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
-    </label>
+    <fieldset className="control segmentControl">
+      <legend>{label}</legend>
+      <div className="segmentOptions">
+        {options.map(([optionValue, optionLabel]) => (
+          <button
+            key={optionValue}
+            type="button"
+            className={value === optionValue ? "active" : ""}
+            aria-pressed={value === optionValue}
+            onClick={() => onChange(optionValue)}
+          >
+            {optionLabel}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+export function BudgetRange({
+  label,
+  minValue,
+  maxValue,
+  onMinChange,
+  onMaxChange,
+}: {
+  readonly label: string;
+  readonly minValue: string;
+  readonly maxValue: string;
+  readonly onMinChange: (value: string) => void;
+  readonly onMaxChange: (value: string) => void;
+}) {
+  return (
+    <fieldset className="control budgetControl">
+      <legend>{label}</legend>
+      <div className="budgetInputs">
+        <input value={minValue} inputMode="decimal" placeholder="最低价" aria-label={`${label}最低价`} onChange={(event) => onMinChange(event.target.value)} />
+        <span>-</span>
+        <input value={maxValue} inputMode="decimal" placeholder="最高价" aria-label={`${label}最高价`} onChange={(event) => onMaxChange(event.target.value)} />
+      </div>
+    </fieldset>
   );
 }
 
@@ -33,9 +68,9 @@ export function FilterSelect({
   readonly onChange: (value: string) => void;
 }) {
   return (
-    <label className="control">
+    <label className="control selectControl">
       <span>{label}</span>
-      <select value={value} onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.target.value)}>
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
         {options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>
             {optionLabel}

@@ -7,13 +7,15 @@ const root = join(here, "..");
 const dataPath = join(root, "data", "cloud-offers-db.json");
 const appPath = join(root, "src", "components", "CloudPriceApp.tsx");
 const tablePath = join(root, "src", "components", "CloudPriceTable.tsx");
+const formatterPath = join(root, "src", "lib", "cloud-offer-formatters.ts");
 const filterPath = join(root, "src", "lib", "cloud-offer-filters.ts");
 
 const payload = JSON.parse(readFileSync(dataPath, "utf8"));
 const appSource = readFileSync(appPath, "utf8");
 const tableSource = readFileSync(tablePath, "utf8");
+const formatterSource = readFileSync(formatterPath, "utf8");
 const filterSource = readFileSync(filterPath, "utf8");
-const combinedSource = `${appSource}\n${tableSource}\n${filterSource}`;
+const combinedSource = `${appSource}\n${tableSource}\n${formatterSource}\n${filterSource}`;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -45,7 +47,7 @@ for (const offer of gpuOffers) {
   if (billing.includes("ondemand")) assert(offer.risk.includes("按需"), `ondemand GPU risk must mention 按需: ${offer.id}`);
 }
 
-const forbiddenText = ["卡网订阅", "官网订阅", "官方 API", "中转 API", "当前筛选结果", "核验/进入"];
+const forbiddenText = ["卡网订阅", "官网订阅", "官方 API", "中转 API", "当前筛选结果", "核验/进入", ">搜索<", "SearchBox", "searchControl"];
 for (const text of forbiddenText) {
   assert(!combinedSource.includes(text), `standalone cloud UI must not include ${text}`);
 }
@@ -62,11 +64,13 @@ for (const header of requiredGpuHeaders) {
   assert(tableSource.includes(`>${header}<`), `GPU table must include ${header}`);
 }
 
-for (const label of ["搜索", "CPU 核数", "内存", "硬盘空间", "地区", "计费方式", "预算", "GPU 型号", "GPU 数量", "显存", "小时价预算", "重置", "筛选"]) {
+for (const label of ["CPU 核数", "内存", "硬盘", "地区", "计费方式", "预算 (USD)", "GPU 型号", "GPU 数量", "显存", "小时价预算 (USD)", "重置", "筛选"]) {
   assert(combinedSource.includes(label), `filter UI must include ${label}`);
 }
 
 assert(tableSource.includes("官网直达"), "official button copy must be 官网直达");
+assert(tableSource.includes("formatBilling(offer.billing)"), "billing column must use display formatter");
+assert(formatterSource.includes("toChineseRegion"), "region column must use Chinese display formatter");
 assert(filterSource.includes("getGpuModelOptions"), "GPU model options must come from real offer data");
 assert(filterSource.includes("filterOffers"), "filter logic must be centralized");
 
