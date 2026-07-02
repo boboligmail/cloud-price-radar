@@ -1,5 +1,6 @@
 import cloudOfferPayload from "../../data/cloud-offers-db.json";
 import cloudOfferUpdatePayload from "../../data/cloud-offer-update-records.json";
+import { formatBandwidth, formatBilling, formatCapacity, formatCompute, formatTraffic } from "./cloud-offer-formatters";
 
 export type CloudOfferKind = "vps" | "gpu";
 
@@ -22,7 +23,6 @@ export type CloudOffer = {
   readonly priceDisplay: string;
   readonly config: CloudOfferConfig;
   readonly billing: string;
-  readonly sourceName: string;
   readonly regions: readonly string[];
   readonly riskLabel: string;
   readonly lastChecked: string;
@@ -70,27 +70,27 @@ const updateData = cloudOfferUpdatePayload as CloudOfferUpdatePayload;
 export const cloudOffers: readonly CloudOffer[] = offerData.offers.flatMap((offer) => {
   if (offer.kind !== "vps" && offer.kind !== "gpu") return [];
 
+  const riskLabel = toRiskLabel(offer.risk, offer.billing, offer.kind);
   return [
     {
       id: offer.id,
       kind: offer.kind,
       provider: offer.provider,
-      product: offer.product,
+      product: formatProductName(offer.product),
       pricingUrl: offer.verifyUrl,
       priceUsd: offer.priceUsd,
       monthlyEstimateUsd: offer.monthlyEstimateUsd,
       priceDisplay: offer.priceText,
       config: {
-        compute: offer.compute,
-        memory: offer.memory,
-        storage: offer.storage,
-        network: offer.network,
+        compute: formatCompute(offer.compute),
+        memory: formatCapacity(offer.memory),
+        storage: formatCapacity(offer.storage),
+        network: `${formatTraffic(offer.network)}；${formatBandwidth(offer.network)}`,
         note: offer.risk,
       },
-      billing: offer.billing,
-      sourceName: offer.sourceName,
+      billing: formatBilling(offer.billing),
       regions: splitRegions(offer.region),
-      riskLabel: toRiskLabel(offer.risk, offer.billing, offer.kind),
+      riskLabel,
       lastChecked: offer.lastChecked,
     },
   ];
@@ -107,6 +107,13 @@ function splitRegions(value: string): readonly string[] {
     .split("/")
     .map((part) => part.trim())
     .filter(Boolean);
+}
+
+function formatProductName(value: string) {
+  return value
+    .replace(/\s*\/\s*(spot|reserved|ondemand|on-demand)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function toRiskLabel(value: string, billing: string, kind: CloudOfferKind) {

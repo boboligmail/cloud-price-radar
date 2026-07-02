@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import type { CloudOffer, CloudOfferKind } from "@/lib/cloud-comparison";
-import { formatBilling, toChineseRegion } from "@/lib/cloud-offer-formatters";
+import { formatBandwidth, formatBilling, formatCapacity, formatCompute, formatTraffic, toChineseRegion } from "@/lib/cloud-offer-formatters";
 import { getGpuModel, normalizeRegion } from "@/lib/cloud-offer-filters";
 
 type CloudPriceTableProps = {
@@ -17,15 +17,17 @@ export function CloudPriceTable({ kind, offers, startIndex }: CloudPriceTablePro
   return (
     <div className="tableWrap">
       <table className={kind === "vps" ? "priceTable vpsTable" : "priceTable gpuTable"}>
+        {kind === "vps" ? <VpsColumnGroup /> : <GpuColumnGroup />}
         <thead>
           {kind === "vps" ? (
             <tr>
               <TableHead>#</TableHead>
-              <TableHead>商家</TableHead>
+              <TableHead>服务商</TableHead>
               <TableHead>CPU</TableHead>
               <TableHead>内存</TableHead>
               <TableHead>硬盘</TableHead>
-              <TableHead>流量/带宽</TableHead>
+              <TableHead>流量</TableHead>
+              <TableHead>带宽</TableHead>
               <TableHead>地区</TableHead>
               <TableHead>计费</TableHead>
               <TableHead>价格</TableHead>
@@ -35,7 +37,7 @@ export function CloudPriceTable({ kind, offers, startIndex }: CloudPriceTablePro
           ) : (
             <tr>
               <TableHead>#</TableHead>
-              <TableHead>商家</TableHead>
+              <TableHead>服务商</TableHead>
               <TableHead>型号</TableHead>
               <TableHead>GPU</TableHead>
               <TableHead>显存</TableHead>
@@ -62,17 +64,55 @@ export function CloudPriceTable({ kind, offers, startIndex }: CloudPriceTablePro
   );
 }
 
+function VpsColumnGroup() {
+  return (
+    <colgroup>
+      <col className="colIndex" />
+      <col className="colProvider" />
+      <col className="colCompute" />
+      <col className="colMemory" />
+      <col className="colStorage" />
+      <col className="colTraffic" />
+      <col className="colBandwidth" />
+      <col className="colRegion" />
+      <col className="colBilling" />
+      <col className="colPrice" />
+      <col className="colRisk" />
+      <col className="colOfficial" />
+    </colgroup>
+  );
+}
+
+function GpuColumnGroup() {
+  return (
+    <colgroup>
+      <col className="colIndex" />
+      <col className="colProvider" />
+      <col className="colModel" />
+      <col className="colCompute" />
+      <col className="colMemory" />
+      <col className="colStorage" />
+      <col className="colRegion" />
+      <col className="colBilling" />
+      <col className="colPrice" />
+      <col className="colRisk" />
+      <col className="colOfficial" />
+    </colgroup>
+  );
+}
+
 function VpsRow({ offer, rowNumber }: { readonly offer: CloudOffer; readonly rowNumber: number }) {
   return (
     <tr data-region-groups={getRegionGroups(offer)}>
       <IndexCell value={rowNumber} />
       <ProviderCell offer={offer} />
-      <DataCell strong>{offer.config.compute}</DataCell>
-      <DataCell strong>{offer.config.memory}</DataCell>
-      <DataCell>{offer.config.storage}</DataCell>
-      <DataCell>{offer.config.network}</DataCell>
+      <DataCell strong>{formatCompute(offer.config.compute)}</DataCell>
+      <DataCell strong>{formatCapacity(offer.config.memory)}</DataCell>
+      <DataCell nowrap>{formatCapacity(offer.config.storage)}</DataCell>
+      <DataCell>{formatTraffic(offer.config.network)}</DataCell>
+      <DataCell>{formatBandwidth(offer.config.network)}</DataCell>
       <DataCell>{formatRegions(offer)}</DataCell>
-      <DataCell>{formatBilling(offer.billing)}</DataCell>
+      <DataCell nowrap>{formatBilling(offer.billing)}</DataCell>
       <PriceCell offer={offer} />
       <RiskCell label={offer.riskLabel} />
       <OfficialCell offer={offer} />
@@ -87,10 +127,10 @@ function GpuRow({ offer, rowNumber }: { readonly offer: CloudOffer; readonly row
       <ProviderCell offer={offer} />
       <DataCell strong>{getGpuModel(offer) || offer.product}</DataCell>
       <DataCell strong>{formatGpuCompute(offer.config.compute)}</DataCell>
-      <DataCell strong>{offer.config.memory}</DataCell>
-      <DataCell>{offer.config.storage}</DataCell>
+      <DataCell strong>{formatCapacity(offer.config.memory)}</DataCell>
+      <DataCell nowrap>{formatCapacity(offer.config.storage)}</DataCell>
       <DataCell>{formatRegions(offer)}</DataCell>
-      <DataCell>{formatBilling(offer.billing)}</DataCell>
+      <DataCell nowrap>{formatBilling(offer.billing)}</DataCell>
       <PriceCell offer={offer} />
       <RiskCell label={offer.riskLabel} />
       <OfficialCell offer={offer} />
@@ -109,14 +149,28 @@ function IndexCell({ value }: { readonly value: number }) {
 function ProviderCell({ offer }: { readonly offer: CloudOffer }) {
   return (
     <td className="providerCell">
-      <strong>{offer.provider}</strong>
-      <span>{offer.sourceName}</span>
+      <span className="providerStack">
+        <ProviderLogo provider={offer.provider} pricingUrl={offer.pricingUrl} />
+        <strong>{offer.provider}</strong>
+      </span>
     </td>
   );
 }
 
-function DataCell({ children, strong = false }: { readonly children: React.ReactNode; readonly strong?: boolean }) {
-  return <td className={strong ? "dataCell strong" : "dataCell"}>{children}</td>;
+function ProviderLogo({ provider, pricingUrl }: { readonly provider: string; readonly pricingUrl: string }) {
+  const label = provider.trim().slice(0, 1).toUpperCase() || "?";
+  const iconUrl = `https://www.google.com/s2/favicons?sz=64&domain_url=https://${getProviderDomain(provider, pricingUrl)}`;
+  return (
+    <span className="providerLogo" aria-hidden="true">
+      <span className="providerIcon" style={{ backgroundImage: `url(${iconUrl})` }} />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function DataCell({ children, strong = false, nowrap = false }: { readonly children: React.ReactNode; readonly strong?: boolean; readonly nowrap?: boolean }) {
+  const className = ["dataCell", strong ? "strong" : "", nowrap ? "nowrap" : ""].filter(Boolean).join(" ");
+  return <td className={className}>{children}</td>;
 }
 
 function PriceCell({ offer }: { readonly offer: CloudOffer }) {
@@ -166,4 +220,48 @@ function riskClassName(label: string) {
   if (label === "抢占中断") return "danger";
   if (label === "税费另算" || label === "IPv4 另付") return "warning";
   return "info";
+}
+
+const providerDomains: Record<string, string> = {
+  aws: "aws.amazon.com",
+  azure: "azure.microsoft.com",
+  bluehost: "bluehost.com",
+  "cherry servers": "cherryservers.com",
+  cloudways: "cloudways.com",
+  contabo: "contabo.com",
+  crusoe: "crusoe.ai",
+  digitalocean: "digitalocean.com",
+  google: "cloud.google.com",
+  hostarmada: "hostarmada.com",
+  hostinger: "hostinger.com",
+  "hosting.com": "hosting.com",
+  hostpapa: "hostpapa.com",
+  inmotion: "inmotionhosting.com",
+  "inmotion hosting": "inmotionhosting.com",
+  interserver: "interserver.net",
+  ionos: "ionos.com",
+  kamatera: "kamatera.com",
+  leadergpu: "leadergpu.com",
+  "liquid web": "liquidweb.com",
+  namecheap: "namecheap.com",
+  oracle: "oracle.com",
+  runpod: "runpod.io",
+  scalahosting: "scalahosting.com",
+  seedvps: "seedvps.com",
+  siteground: "siteground.com",
+  "together ai": "together.ai",
+  ultahost: "ultahost.com",
+  verda: "verda.com",
+  vultr: "vultr.com",
+  "yourserver.se": "yourserver.se",
+};
+
+function getProviderDomain(provider: string, pricingUrl: string) {
+  const mapped = providerDomains[provider.trim().toLowerCase()];
+  if (mapped) return mapped;
+  try {
+    return new URL(pricingUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return "example.com";
+  }
 }

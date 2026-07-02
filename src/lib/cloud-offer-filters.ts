@@ -32,10 +32,10 @@ export const emptyFilters: CloudFilters = {
 };
 
 export const vpsCpuOptions = [["0", "不限"], ["1", "1"], ["2", "2"], ["4", "4"], ["8", "8+"]] as const;
-export const vpsMemoryOptions = [["0", "不限"], ["1", "1GB"], ["2", "2GB"], ["4", "4GB"], ["8", "8GB+"]] as const;
-export const storageOptions = [["0", "不限"], ["20", "20GB+"], ["50", "50GB+"], ["100", "100GB+"], ["200", "200GB+"]] as const;
+export const vpsMemoryOptions = [["0", "不限"], ["1", "1 G"], ["2", "2 G"], ["4", "4 G"], ["8", "8 G+"]] as const;
+export const storageOptions = [["0", "不限"], ["20", "20 G+"], ["50", "50 G+"], ["100", "100 G+"], ["200", "200 G+"]] as const;
 export const gpuCountOptions = [["0", "不限"], ["0.5", "半卡+"], ["1", "1 张+"], ["2", "2 张+"], ["4", "4 张+"]] as const;
-export const vramOptions = [["0", "不限"], ["8", "8GB+"], ["16", "16GB+"], ["24", "24GB+"], ["48", "48GB+"], ["80", "80GB+"]] as const;
+export const vramOptions = [["0", "不限"], ["8", "8 G+"], ["16", "16 G+"], ["24", "24 G+"], ["48", "48 G+"], ["80", "80 G+"]] as const;
 export const billingOptions = [["all", "不限"], ["month", "月付"], ["hour", "小时"], ["spot", "抢占式"]] as const;
 
 export function filterOffers(offers: readonly CloudOffer[], kind: CloudOfferKind, filters: CloudFilters) {
@@ -52,7 +52,7 @@ export function filterOffers(offers: readonly CloudOffer[], kind: CloudOfferKind
           metrics.memoryGb >= Number(filters.memoryMin) &&
           metrics.storageGb >= Number(filters.storageMin) &&
           (toNumber(filters.monthlyMin) === 0 || offer.monthlyEstimateUsd >= toNumber(filters.monthlyMin)) &&
-          (Number(filters.monthlyMax) === 0 || offer.monthlyEstimateUsd <= Number(filters.monthlyMax))
+          (toNumber(filters.monthlyMax) === 0 || offer.monthlyEstimateUsd <= toNumber(filters.monthlyMax))
         );
       }
 
@@ -61,7 +61,7 @@ export function filterOffers(offers: readonly CloudOffer[], kind: CloudOfferKind
         (filters.gpuModel === "all" || getGpuModel(offer) === filters.gpuModel) &&
         metrics.vramGb >= Number(filters.vramMin) &&
         (toNumber(filters.hourlyMin) === 0 || offer.priceUsd >= toNumber(filters.hourlyMin)) &&
-        (Number(filters.hourlyMax) === 0 || offer.priceUsd <= Number(filters.hourlyMax))
+        (toNumber(filters.hourlyMax) === 0 || offer.priceUsd <= toNumber(filters.hourlyMax))
       );
     })
     .sort((left, right) => {
@@ -111,7 +111,7 @@ export function getGpuModel(offer: CloudOffer) {
 function matchesBilling(billing: string, mode: string) {
   const normalized = billing.toLowerCase();
   if (mode === "all") return true;
-  if (mode === "month") return /month|monthly|月付|按月/.test(normalized);
+  if (mode === "month") return /month|monthly|月付|按月|月/.test(normalized);
   if (mode === "hour") return /hour|hourly|按小时|小时/.test(normalized);
   if (mode === "spot") return /spot|preempt|interrupt|抢占|竞价/.test(normalized);
   return false;

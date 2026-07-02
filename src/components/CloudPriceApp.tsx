@@ -2,7 +2,7 @@
 
 import { Clock3, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { BudgetRange, FilterSelect, Pagination, SegmentedControl } from "@/components/Controls";
+import { BudgetRange, FilterSelect, Pagination } from "@/components/Controls";
 import { CloudPriceTable } from "@/components/CloudPriceTable";
 import type { CloudOffer, CloudOfferKind } from "@/lib/cloud-comparison";
 import {
@@ -103,11 +103,11 @@ export function CloudPriceApp({ offers, updatedAt }: CloudPriceAppProps) {
         <section className="filterPanel" aria-label="筛选区">
           {activeKind === "vps" ? (
             <>
-              <SegmentedControl label="CPU 核数" value={draftFilters.cpuMin} options={vpsCpuOptions} onChange={(cpuMin) => updateDraft({ cpuMin })} />
-              <SegmentedControl label="内存" value={draftFilters.memoryMin} options={vpsMemoryOptions} onChange={(memoryMin) => updateDraft({ memoryMin })} />
-              <SegmentedControl label="硬盘" value={draftFilters.storageMin} options={storageOptions} onChange={(storageMin) => updateDraft({ storageMin })} />
-              <SegmentedControl label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
-              <SegmentedControl label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
+              <FilterSelect label="CPU 核数" value={draftFilters.cpuMin} options={vpsCpuOptions} onChange={(cpuMin) => updateDraft({ cpuMin })} />
+              <FilterSelect label="内存" value={draftFilters.memoryMin} options={vpsMemoryOptions} onChange={(memoryMin) => updateDraft({ memoryMin })} />
+              <FilterSelect label="硬盘" value={draftFilters.storageMin} options={storageOptions} onChange={(storageMin) => updateDraft({ storageMin })} />
+              <FilterSelect label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
+              <FilterSelect label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
               <BudgetRange
                 label="预算 (USD)"
                 minValue={draftFilters.monthlyMin}
@@ -119,10 +119,10 @@ export function CloudPriceApp({ offers, updatedAt }: CloudPriceAppProps) {
           ) : (
             <>
               <FilterSelect label="GPU 型号" value={draftFilters.gpuModel} options={gpuModelOptions} onChange={(gpuModel) => updateDraft({ gpuModel })} />
-              <SegmentedControl label="GPU 数量" value={draftFilters.gpuCountMin} options={gpuCountOptions} onChange={(gpuCountMin) => updateDraft({ gpuCountMin })} />
-              <SegmentedControl label="显存" value={draftFilters.vramMin} options={vramOptions} onChange={(vramMin) => updateDraft({ vramMin })} />
-              <SegmentedControl label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
-              <SegmentedControl label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
+              <FilterSelect label="GPU 数量" value={draftFilters.gpuCountMin} options={gpuCountOptions} onChange={(gpuCountMin) => updateDraft({ gpuCountMin })} />
+              <FilterSelect label="显存" value={draftFilters.vramMin} options={vramOptions} onChange={(vramMin) => updateDraft({ vramMin })} />
+              <FilterSelect label="地区" value={draftFilters.region} options={regionOptions} onChange={(region) => updateDraft({ region })} />
+              <FilterSelect label="计费方式" value={draftFilters.billingMode} options={billingOptions} onChange={(billingMode) => updateDraft({ billingMode })} />
               <BudgetRange
                 label="小时价预算 (USD)"
                 minValue={draftFilters.hourlyMin}

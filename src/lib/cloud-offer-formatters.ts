@@ -1,17 +1,55 @@
-import { normalizeRegion } from "@/lib/cloud-offer-filters";
+import { normalizeRegion } from "./cloud-offer-filters";
+
+export function formatCompute(value: string) {
+  return value.replace(/\bUnknown\b/gi, "未知");
+}
+
+export function formatCapacity(value: string) {
+  return value
+    .replace(/(\d+(?:\.\d+)?)\s*TB\b/gi, (_, amount: string) => `${formatNumber(Number(amount) * 1024)} G`)
+    .replace(/(\d+(?:\.\d+)?)\s*GB\b/gi, "$1 G")
+    .replace(/(\d+(?:\.\d+)?)\s*MB\b/gi, (_, amount: string) => `${formatNumber(Number(amount) / 1024)} G`)
+    .replace(/\s*(RAM|VRAM)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function formatTraffic(value: string) {
+  const parts = splitNetworkParts(value);
+  const traffic = parts.find((part) => !isBandwidth(part) && !isIpNoise(part));
+  return traffic ? formatCapacity(traffic) : "未列出";
+}
+
+export function formatBandwidth(value: string) {
+  const parts = splitNetworkParts(value);
+  const bandwidth = parts.find(isBandwidth);
+  return bandwidth ? bandwidth.replace(/\s+/g, " ").trim() : "未列出";
+}
 
 export function formatBilling(value: string) {
-  const withoutLeadingMonthly = value.replace(/^月付；\s*/, "");
-  const localized = withoutLeadingMonthly
+  const localized = value
+    .replace(/^月付；\s*/, "")
+    .replace(/[；;]/g, "/")
+    .replace(/\s*\/\s*/g, "/")
     .replace(/\bondemand\b/gi, "按需")
     .replace(/\bon-demand\b/gi, "按需")
     .replace(/\breserved\b/gi, "预留")
     .replace(/\bspot\b/gi, "抢占式")
-    .replace(/\b(\d+)\s*year\b/gi, "$1 年")
+    .replace(/\b(\d+)\s*month\b/gi, "$1月")
+    .replace(/\b(\d+)\s*year\b/gi, "$1年")
+    .replace(/\bmonth\b/gi, "月")
     .replace(/\byear\b/gi, "年")
+    .replace(/\bweek\b/gi, "周")
+    .replace(/\bday\b/gi, "天")
+    .replace(/\bminute\b/gi, "分钟")
     .replace(/\bhour\b/gi, "小时")
     .replace(/\bsecond\b/gi, "秒")
-    .replace(/\bmonth\b/gi, "月付");
+    .replace(/(\d+)\s*月付/g, "$1月")
+    .replace(/(\d+)\s*年合约/g, "$1年")
+    .replace(/(\d+)\s*月/g, "$1月")
+    .replace(/(\d+)\s*年/g, "$1年")
+    .replace(/^月付$/, "1月")
+    .trim();
 
   return localized || value;
 }
@@ -75,3 +113,23 @@ const regionLabels: Record<string, string> = {
   "United States": "美国",
   ZA: "南非",
 };
+
+function splitNetworkParts(value: string) {
+  return value
+    .split(/[；;]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function isBandwidth(value: string) {
+  return /\b\d+(?:\.\d+)?\s*[GMK]?bps\b/i.test(value);
+}
+
+function isIpNoise(value: string) {
+  return /\bIPv[46]\b|Dedicated IPs?/i.test(value);
+}
+
+function formatNumber(value: number) {
+  if (!Number.isFinite(value)) return "0";
+  return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, "");
+}

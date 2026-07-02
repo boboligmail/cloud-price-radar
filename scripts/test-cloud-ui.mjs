@@ -69,19 +69,30 @@ async function assertVpsPage(page) {
   assert(!bodyText.includes("当前筛选结果"), "right-side summary panel must not render");
   assert(!bodyText.includes("核验/进入"), "old official button copy must not render");
   assert(!bodyText.includes("商家 / CPU / 地区"), "search box placeholder must not render");
+  assert(!bodyText.includes("CompareVPS"), "provider source label must not render");
+  assert(!bodyText.includes("GB RAM"), "memory cells must not render GB RAM");
+  assert(!bodyText.includes("Unknown"), "unknown CPU vendor must be localized");
+  assert(!bodyText.includes("IPv4 included"), "network cells must not render IPv4 included noise");
+  assert((await page.locator("fieldset").count()) === 0, "filter panel must use select/input controls, not segmented fieldsets");
   assert(await page.locator("th", { hasText: "CPU" }).count(), "VPS table must include CPU");
+  assert(await page.locator("th", { hasText: "流量" }).count(), "VPS table must include traffic column");
+  assert(await page.locator("th", { hasText: "带宽" }).count(), "VPS table must include bandwidth column");
+  assert((await page.locator("th", { hasText: "流量/带宽" }).count()) === 0, "VPS table must not keep combined network column");
   assert((await page.locator("th", { hasText: "型号" }).count()) === 0, "VPS table must not include 型号 column");
   assert(bodyText.includes("官网直达"), "official button copy must be 官网直达");
+  assert((await page.locator(".providerLogo").count()) > 0, "provider logo must render before provider names");
 
-  await page.locator("fieldset").filter({ hasText: "CPU 核数" }).getByRole("button", { name: "2" }).click();
+  await page.locator("label").filter({ hasText: "CPU 核数" }).locator("select").selectOption("2");
   await page.getByRole("button", { name: /筛选/ }).click();
   const rows = await tableRows(page);
   assert(rows.length > 0, "VPS CPU filter must keep visible rows");
   for (const row of rows) {
     assert(parseFirstNumber(row.cells[2]) >= 2, `VPS CPU filter leaked row: ${row.text}`);
-    assert(!row.cells[6].includes("United States"), `VPS region must be localized: ${row.text}`);
-    assert(!row.cells[7].startsWith("月付；"), `VPS billing must not keep leading 月付: ${row.text}`);
+    assert(!row.cells[5].includes("1 IPv4"), `VPS traffic column must not include IP address text: ${row.text}`);
+    assert(/Gbps|未列出/.test(row.cells[6]), `VPS bandwidth column must show bandwidth only: ${row.text}`);
+    assert(!row.cells[7].includes("United States"), `VPS region must be localized: ${row.text}`);
   }
+  assertCompactBillingRows(rows, 8, "VPS");
 }
 
 async function assertGpuPage(page) {
@@ -106,10 +117,21 @@ async function assertGpuPage(page) {
     for (const row of rows) {
       assert(row.cells[2].includes(model), `GPU model filter leaked row: ${row.text}`);
     }
+    assertCompactBillingRows(rows, 7, "GPU model");
   }
 
   await page.getByRole("button", { name: /重置/ }).click();
-  await page.locator("fieldset").filter({ hasText: "计费方式" }).getByRole("button", { name: "抢占式" }).click();
+  const v100Option = gpuModelOptions.find((text) => /V100/.test(text));
+  if (v100Option) {
+    await gpuModelSelect.selectOption({ label: v100Option });
+    await page.getByRole("button", { name: /筛选/ }).click();
+    const rows = await tableRows(page);
+    assert(rows.length > 0, "GPU V100 filter must keep visible rows");
+    assertCompactBillingRows(rows, 7, "GPU V100");
+  }
+
+  await page.getByRole("button", { name: /重置/ }).click();
+  await page.locator("label").filter({ hasText: "计费方式" }).locator("select").selectOption("spot");
   await page.getByRole("button", { name: /筛选/ }).click();
   const spotRows = await tableRows(page);
   assert(spotRows.length > 0, "GPU spot filter must keep visible rows");
@@ -117,9 +139,10 @@ async function assertGpuPage(page) {
     assert(row.cells[7].includes("抢占式"), `GPU spot filter leaked billing row: ${row.text}`);
     assert(row.cells[9] === "抢占中断", `GPU spot risk label must be 抢占中断: ${row.text}`);
   }
+  assertCompactBillingRows(spotRows, 7, "GPU spot");
 
   await page.getByRole("button", { name: /重置/ }).click();
-  await page.locator("fieldset").filter({ hasText: "地区" }).getByRole("button", { name: "美国" }).click();
+  await page.locator("label").filter({ hasText: "地区" }).locator("select").selectOption("us");
   await page.getByRole("button", { name: /筛选/ }).click();
   const usRows = await tableRows(page);
   assert(usRows.length > 0, "GPU US region filter must keep visible rows");
@@ -132,6 +155,16 @@ async function assertGpuPage(page) {
   if (await nextButton.isEnabled()) {
     await nextButton.click();
     assert((await page.locator("body").innerText()).includes("当前第 2 /"), "pagination must move forward");
+  }
+}
+
+function assertCompactBillingRows(rows, billingIndex, label) {
+  for (const row of rows) {
+    const billing = row.cells[billingIndex] ?? "";
+    assert(!/(?:month|year|week|day|minute|second|hour|reserved|ondemand|spot)/i.test(billing), `${label} billing must be localized: ${row.text}`);
+    assert(!billing.includes("月付"), `${label} billing must use compact month copy: ${row.text}`);
+    assert(!billing.includes("年合约"), `${label} billing must use compact year copy: ${row.text}`);
+    assert(!billing.startsWith("月付；"), `${label} billing must not keep leading 月付: ${row.text}`);
   }
 }
 

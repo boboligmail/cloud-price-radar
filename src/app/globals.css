@@ -104,7 +104,6 @@ a {
 }
 
 .navItem:focus-visible,
-.segmentOptions button:focus-visible,
 .budgetInputs input:focus,
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
@@ -149,8 +148,8 @@ a {
 }
 
 .filterPanel {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 12px;
   align-items: end;
   margin-bottom: 18px;
@@ -164,7 +163,7 @@ a {
 .control {
   display: grid;
   gap: 7px;
-  min-width: max-content;
+  min-width: 0;
   margin: 0;
   border: 0;
   padding: 0;
@@ -195,42 +194,10 @@ a {
   box-shadow: 0 0 0 3px rgb(19 138 77 / 0.12);
 }
 
-.segmentOptions,
 .budgetInputs {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-}
-
-.segmentOptions button {
-  min-width: 48px;
-  height: 40px;
-  border: 1px solid var(--border);
-  border-left: 0;
-  background: #fff;
-  color: #26312f;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 750;
-  padding: 0 12px;
-  white-space: nowrap;
-}
-
-.segmentOptions button:first-child {
-  border-left: 1px solid var(--border);
-  border-radius: 6px 0 0 6px;
-}
-
-.segmentOptions button:last-child {
-  border-radius: 0 6px 6px 0;
-}
-
-.segmentOptions button.active {
-  border-color: rgb(19 138 77 / 0.48);
-  background: var(--accent-soft);
-  color: var(--accent);
-  position: relative;
-  z-index: 1;
 }
 
 .budgetInputs {
@@ -243,7 +210,7 @@ a {
 }
 
 .selectControl {
-  min-width: 210px;
+  min-width: 132px;
 }
 
 .budgetInputs input:focus {
@@ -306,10 +273,70 @@ a {
 
 .priceTable {
   width: 100%;
-  min-width: 1160px;
   border-collapse: collapse;
+  table-layout: fixed;
   text-align: left;
   font-size: 13px;
+}
+
+.vpsTable {
+  min-width: 1335px;
+}
+
+.gpuTable {
+  min-width: 1275px;
+}
+
+.colIndex {
+  width: 42px;
+}
+
+.colProvider {
+  width: 165px;
+}
+
+.colModel {
+  width: 135px;
+}
+
+.colCompute {
+  width: 116px;
+}
+
+.colMemory {
+  width: 78px;
+}
+
+.colStorage {
+  width: 126px;
+}
+
+.colTraffic {
+  width: 96px;
+}
+
+.colBandwidth {
+  width: 88px;
+}
+
+.colRegion {
+  width: 142px;
+}
+
+.colBilling {
+  width: 158px;
+}
+
+.colPrice {
+  width: 116px;
+}
+
+.colRisk {
+  width: 92px;
+}
+
+.colOfficial {
+  width: 104px;
 }
 
 .priceTable th {
@@ -317,14 +344,15 @@ a {
   color: #2b3432;
   font-size: 12px;
   font-weight: 850;
-  padding: 12px 12px;
+  padding: 13px 12px;
   white-space: nowrap;
 }
 
 .priceTable td {
   border-top: 1px solid var(--border);
-  padding: 12px;
+  padding: 13px 12px;
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 .priceTable tr:hover td {
@@ -338,24 +366,63 @@ a {
 }
 
 .providerCell {
-  min-width: 138px;
+  min-width: 0;
 }
 
-.providerCell strong,
-.providerCell span {
-  display: block;
+.providerStack {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
 }
 
 .providerCell strong {
   color: var(--text);
   font-size: 14px;
+  line-height: 1.25;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.providerCell span {
-  margin-top: 3px;
-  color: var(--soft);
-  font-size: 11px;
-  font-weight: 700;
+.providerLogo {
+  display: inline-flex;
+  flex: 0 0 26px;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #fff, var(--surface));
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 900;
+  overflow: hidden;
+  position: relative;
+}
+
+.providerLogo span {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.providerIcon {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.providerLogo span:not(.providerIcon) {
+  position: absolute;
+  z-index: 0;
+  line-height: 18px;
+  text-align: center;
 }
 
 .dataCell {
@@ -367,6 +434,11 @@ a {
 .dataCell.strong {
   color: #192221;
   font-weight: 850;
+}
+
+.dataCell.nowrap {
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .priceCell strong,
@@ -483,7 +555,7 @@ a {
 
 @media (max-width: 1180px) {
   .filterPanel {
-    align-items: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -513,16 +585,12 @@ a {
   }
 
   .filterPanel {
-    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 
   .control,
   .selectControl {
     min-width: 100%;
-  }
-
-  .segmentOptions {
-    overflow-x: auto;
   }
 
   .hero h1 {

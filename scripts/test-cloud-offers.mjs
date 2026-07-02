@@ -5,17 +5,8 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 const dataPath = join(root, "data", "cloud-offers-db.json");
-const appPath = join(root, "src", "components", "CloudPriceApp.tsx");
-const tablePath = join(root, "src", "components", "CloudPriceTable.tsx");
-const formatterPath = join(root, "src", "lib", "cloud-offer-formatters.ts");
-const filterPath = join(root, "src", "lib", "cloud-offer-filters.ts");
 
 const payload = JSON.parse(readFileSync(dataPath, "utf8"));
-const appSource = readFileSync(appPath, "utf8");
-const tableSource = readFileSync(tablePath, "utf8");
-const formatterSource = readFileSync(formatterPath, "utf8");
-const filterSource = readFileSync(filterPath, "utf8");
-const combinedSource = `${appSource}\n${tableSource}\n${formatterSource}\n${filterSource}`;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -35,6 +26,10 @@ for (const offer of payload.offers) {
   assert(typeof offer.provider === "string" && offer.provider.length > 0, `provider missing for ${offer.id}`);
   assert(typeof offer.priceText === "string" && offer.priceText.length > 0, `priceText missing for ${offer.id}`);
   assert(typeof offer.verifyUrl === "string" && offer.verifyUrl.startsWith("https://"), `verifyUrl missing for ${offer.id}`);
+  assert(typeof offer.compute === "string" && offer.compute.length > 0, `compute missing for ${offer.id}`);
+  assert(typeof offer.memory === "string" && offer.memory.length > 0, `memory missing for ${offer.id}`);
+  assert(typeof offer.storage === "string" && offer.storage.length > 0, `storage missing for ${offer.id}`);
+  assert(typeof offer.network === "string" && offer.network.length > 0, `network missing for ${offer.id}`);
 }
 
 assert(gpuOffers.some((offer) => /spot/i.test(offer.billing)), "GPU dataset must include spot rows for risk coverage");
@@ -47,31 +42,9 @@ for (const offer of gpuOffers) {
   if (billing.includes("ondemand")) assert(offer.risk.includes("按需"), `ondemand GPU risk must mention 按需: ${offer.id}`);
 }
 
-const forbiddenText = ["卡网订阅", "官网订阅", "官方 API", "中转 API", "当前筛选结果", "核验/进入", ">搜索<", "SearchBox", "searchControl"];
-for (const text of forbiddenText) {
-  assert(!combinedSource.includes(text), `standalone cloud UI must not include ${text}`);
-}
-
-const requiredVpsHeaders = ["商家", "CPU", "内存", "硬盘", "流量/带宽", "地区", "计费", "价格", "风险", "官网"];
-for (const header of requiredVpsHeaders) {
-  assert(tableSource.includes(`>${header}<`), `VPS table must include ${header}`);
-}
-assert(!tableSource.includes(">产品/机型<"), "VPS table must not include product/model column");
-assert(!tableSource.includes(">配置明细<"), "table must not keep old configuration-details column");
-
-const requiredGpuHeaders = ["型号", "GPU", "显存", "硬盘", "地区", "计费", "价格", "风险", "官网"];
-for (const header of requiredGpuHeaders) {
-  assert(tableSource.includes(`>${header}<`), `GPU table must include ${header}`);
-}
-
-for (const label of ["CPU 核数", "内存", "硬盘", "地区", "计费方式", "预算 (USD)", "GPU 型号", "GPU 数量", "显存", "小时价预算 (USD)", "重置", "筛选"]) {
-  assert(combinedSource.includes(label), `filter UI must include ${label}`);
-}
-
-assert(tableSource.includes("官网直达"), "official button copy must be 官网直达");
-assert(tableSource.includes("formatBilling(offer.billing)"), "billing column must use display formatter");
-assert(formatterSource.includes("toChineseRegion"), "region column must use Chinese display formatter");
-assert(filterSource.includes("getGpuModelOptions"), "GPU model options must come from real offer data");
-assert(filterSource.includes("filterOffers"), "filter logic must be centralized");
+assert(vpsOffers.some((offer) => /IPv4/i.test(offer.risk)), "VPS dataset must include IPv4 risk coverage");
+assert(vpsOffers.some((offer) => /United States|US|Germany|Netherlands|China/i.test(offer.region)), "VPS dataset must include region coverage");
+assert(vpsOffers.some((offer) => /\d/.test(offer.network)), "VPS dataset must include network coverage");
+assert(gpuOffers.some((offer) => /RTX|A100|H100|L40|4090|3090/i.test(`${offer.product} ${offer.compute}`)), "GPU dataset must include model coverage");
 
 console.log(`cloud price radar contract ok: ${payload.offers.length} offers (${vpsOffers.length} VPS, ${gpuOffers.length} GPU)`);

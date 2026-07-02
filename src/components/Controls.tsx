@@ -1,36 +1,5 @@
 type Option = readonly [string, string];
 
-export function SegmentedControl({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  readonly label: string;
-  readonly value: string;
-  readonly options: readonly Option[];
-  readonly onChange: (value: string) => void;
-}) {
-  return (
-    <fieldset className="control segmentControl">
-      <legend>{label}</legend>
-      <div className="segmentOptions">
-        {options.map(([optionValue, optionLabel]) => (
-          <button
-            key={optionValue}
-            type="button"
-            className={value === optionValue ? "active" : ""}
-            aria-pressed={value === optionValue}
-            onClick={() => onChange(optionValue)}
-          >
-            {optionLabel}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
 export function BudgetRange({
   label,
   minValue,
@@ -45,14 +14,14 @@ export function BudgetRange({
   readonly onMaxChange: (value: string) => void;
 }) {
   return (
-    <fieldset className="control budgetControl">
-      <legend>{label}</legend>
+    <div className="control budgetControl" role="group" aria-label={label}>
+      <span>{label}</span>
       <div className="budgetInputs">
         <input value={minValue} inputMode="decimal" placeholder="最低价" aria-label={`${label}最低价`} onChange={(event) => onMinChange(event.target.value)} />
         <span>-</span>
         <input value={maxValue} inputMode="decimal" placeholder="最高价" aria-label={`${label}最高价`} onChange={(event) => onMaxChange(event.target.value)} />
       </div>
-    </fieldset>
+    </div>
   );
 }
 
