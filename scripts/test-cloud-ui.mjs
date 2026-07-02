@@ -65,6 +65,7 @@ async function assertVpsPage(page) {
   assert(bodyText.includes("按 CPU、内存、硬盘、地区和计费方式筛选，直接去官网核验。"), "VPS subtitle must match target copy");
   assert(headerText.includes("VPS 比价") && headerText.includes("GPU 租赁"), "header must expose VPS/GPU nav");
   assert(headerText.includes("最近更新时间："), "header must show recent update time");
+  await assertHeaderContentAlignment(page);
   assert(!/卡网订阅|官网订阅|官方 API|中转 API|数据源|更新记录/.test(headerText), "header must not expose old ai-home navigation");
   assert(!bodyText.includes("当前筛选结果"), "right-side summary panel must not render");
   assert(!bodyText.includes("核验/进入"), "old official button copy must not render");
@@ -93,6 +94,23 @@ async function assertVpsPage(page) {
     assert(!row.cells[7].includes("United States"), `VPS region must be localized: ${row.text}`);
   }
   assertCompactBillingRows(rows, 8, "VPS");
+}
+
+async function assertHeaderContentAlignment(page) {
+  const positions = await page.evaluate(() => {
+    const brand = document.querySelector(".brand")?.getBoundingClientRect();
+    const hero = document.querySelector(".hero")?.getBoundingClientRect();
+    const filterPanel = document.querySelector(".filterPanel")?.getBoundingClientRect();
+    return {
+      brandLeft: brand?.left ?? null,
+      heroLeft: hero?.left ?? null,
+      filterLeft: filterPanel?.left ?? null,
+    };
+  });
+
+  assert(positions.brandLeft !== null && positions.heroLeft !== null && positions.filterLeft !== null, "layout alignment targets must render");
+  assert(Math.abs(positions.brandLeft - positions.heroLeft) <= 2, `header brand must align with hero: ${JSON.stringify(positions)}`);
+  assert(Math.abs(positions.brandLeft - positions.filterLeft) <= 2, `header brand must align with filter panel: ${JSON.stringify(positions)}`);
 }
 
 async function assertGpuPage(page) {

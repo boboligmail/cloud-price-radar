@@ -71,22 +71,24 @@ export function CloudPriceApp({ offers, updatedAt }: CloudPriceAppProps) {
   return (
     <>
       <header className="topbar">
-        <a className="brand" href="#vps" aria-label="cloud-price-radar 首页">
-          cloud-price-radar
-        </a>
-        <nav className="topnav" role="tablist" aria-label="云资源类型">
-          <button type="button" role="tab" aria-selected={activeKind === "vps"} className={activeKind === "vps" ? "navItem active" : "navItem"} onClick={() => switchTab("vps")}>
-            <span>VPS 比价</span>
-            <small>{tabTotals.vps} 条</small>
-          </button>
-          <button type="button" role="tab" aria-selected={activeKind === "gpu"} className={activeKind === "gpu" ? "navItem active" : "navItem"} onClick={() => switchTab("gpu")}>
-            <span>GPU 租赁</span>
-            <small>{tabTotals.gpu} 条</small>
-          </button>
-        </nav>
-        <div className="updatedAt">
-          <Clock3 size={16} />
-          <span>最近更新时间：{formatUpdatedAt(updatedAt)}</span>
+        <div className="topbarInner">
+          <a className="brand" href="#vps" aria-label="cloud-price-radar 首页">
+            cloud-price-radar
+          </a>
+          <nav className="topnav" role="tablist" aria-label="云资源类型">
+            <button type="button" role="tab" aria-selected={activeKind === "vps"} className={activeKind === "vps" ? "navItem active" : "navItem"} onClick={() => switchTab("vps")}>
+              <span>VPS 比价</span>
+              <small>{tabTotals.vps} 条</small>
+            </button>
+            <button type="button" role="tab" aria-selected={activeKind === "gpu"} className={activeKind === "gpu" ? "navItem active" : "navItem"} onClick={() => switchTab("gpu")}>
+              <span>GPU 租赁</span>
+              <small>{tabTotals.gpu} 条</small>
+            </button>
+          </nav>
+          <div className="updatedAt">
+            <Clock3 size={16} />
+            <span>最近更新时间：{formatUpdatedAt(updatedAt)}</span>
+          </div>
         </div>
       </header>
 
